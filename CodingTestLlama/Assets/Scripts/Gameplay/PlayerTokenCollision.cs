@@ -18,7 +18,9 @@ namespace Platformer.Gameplay
 
         public override void Execute()
         {
-            AudioSource.PlayClipAtPoint(token.tokenCollectAudio, token.transform.position);
+            Vector3 audioPos = token.transform.position;
+            audioPos.z = Camera.main.transform.position.z;
+            AudioSource.PlayClipAtPoint(token.tokenCollectAudio, audioPos);            
         }
     }
 }
