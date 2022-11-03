@@ -6,6 +6,8 @@ using static Platformer.Core.Simulation;
 using Platformer.Model;
 using Platformer.Core;
 using UnityEngine.Assertions;
+using Unity.VisualScripting;
+using TMPro;
 
 namespace Platformer.Mechanics
 {
@@ -37,8 +39,8 @@ namespace Platformer.Mechanics
 
         bool jump;
         Vector2 move;
-        SpriteRenderer spriteRenderer;
-        internal Animator animator;
+        [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] internal Animator animator;
         readonly PlatformerModel model = Simulation.GetModel<PlatformerModel>();
 
         public Bounds Bounds => collider2d.bounds;
@@ -54,14 +56,30 @@ namespace Platformer.Mechanics
         private float _runParticlesEmissionTimeMultiplier = 0;
         [SerializeField] private float _rotationYWhenMovingRightRunParticles = -90;
         [SerializeField] private float _rotationYWhenMovingLeftRunParticles = 90;
+        [Header("Player Feedback : Sprite Scaling")]
+        [SerializeField] private Vector2 _defaultScale = Vector2.one;
+        [SerializeField] private Vector2 _defaultSpriteOffset = Vector2.zero;
+        [SerializeField] private Vector2 _jumpingScale = Vector2.one;
+        [SerializeField] private Vector2 _jumpingSpriteOffset = Vector2.zero;
+        [SerializeField] private Vector2 _runningScale = Vector2.one;
+        [SerializeField] private Vector2 _runningSpriteOffset = Vector2.zero;
+        private enum SpriteScaleState
+        {
+            defaultState,
+            jumping,
+
+            running
+        }
 
         void Awake()
         {
             health = GetComponent<Health>();
             audioSource = GetComponent<AudioSource>();
             collider2d = GetComponent<Collider2D>();
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            animator = GetComponent<Animator>();
+            if (!spriteRenderer)
+            { spriteRenderer = GetComponent<SpriteRenderer>(); }
+            if (!animator)
+            { animator = GetComponent<Animator>(); }
             Assert.IsNotNull(_dustParticleSystem);
             Assert.IsNotNull(_runningParticleSystem);
             if (_runningParticleSystem)
@@ -79,6 +97,15 @@ namespace Platformer.Mechanics
                 {
                     stopJump = true;
                     Schedule<PlayerStopJump>().player = this;
+                }
+
+                if (Mathf.Abs(move.x) > float.Epsilon)
+                {
+                    SetSpriteScaleState(SpriteScaleState.running);
+                }
+                else
+                {
+                    SetSpriteScaleState(SpriteScaleState.defaultState);
                 }
 
                 if (_runningParticleSystem)
@@ -121,6 +148,7 @@ namespace Platformer.Mechanics
                     stopJump = false;
                     if (_dustParticleSystem)
                     { _dustParticleSystem.Emit(_nrJumpParticles); }
+                    SetSpriteScaleState(SpriteScaleState.jumping);
                     break;
                 case JumpState.Jumping:
                     if (!IsGrounded)
@@ -178,6 +206,27 @@ namespace Platformer.Mechanics
             Jumping,
             InFlight,
             Landed
+        }
+
+        private void SetSpriteScaleState(SpriteScaleState spriteScaleState)
+        {
+            if (!spriteRenderer)
+            { return; }
+            switch (spriteScaleState)
+            {
+                case SpriteScaleState.defaultState:
+                    spriteRenderer.transform.localScale = _defaultScale;
+                    spriteRenderer.transform.localPosition = _defaultSpriteOffset;
+                    break;
+                case SpriteScaleState.jumping:
+                    spriteRenderer.transform.localScale = _jumpingScale;
+                    spriteRenderer.transform.localPosition = _jumpingSpriteOffset;
+                    break;
+                case SpriteScaleState.running:
+                    spriteRenderer.transform.localScale = _runningScale;
+                    spriteRenderer.transform.localPosition = _runningSpriteOffset;
+                    break;
+            }
         }
     }
 }
