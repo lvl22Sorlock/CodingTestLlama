@@ -22,12 +22,32 @@ namespace Platformer.Mechanics
 
         int currentHP;
 
+        [SerializeField] private float _invincibilityDuration = 0.25f;
+        private float _remainingInvincibilityDuration = 0;
+
+        [SerializeField] private HealthBar _healthBar = null;
+
+        private void Start()
+        {
+            UpdateHealthBar();
+        }
+
+        private void Update()
+        {
+            if (_remainingInvincibilityDuration > 0)
+            {
+                _remainingInvincibilityDuration -= Time.deltaTime;
+            }
+        }
+
         /// <summary>
         /// Increment the HP of the entity.
         /// </summary>
         public void Increment()
         {
             currentHP = Mathf.Clamp(currentHP + 1, 0, maxHP);
+
+            UpdateHealthBar();
         }
 
         /// <summary>
@@ -36,12 +56,24 @@ namespace Platformer.Mechanics
         /// </summary>
         public void Decrement()
         {
+            //if (_remainingInvincibilityDuration > 0)
+            //{ return; }
+
             currentHP = Mathf.Clamp(currentHP - 1, 0, maxHP);
             if (currentHP == 0)
             {
                 var ev = Schedule<HealthIsZero>();
                 ev.health = this;
             }
+
+            _remainingInvincibilityDuration = _invincibilityDuration;
+            UpdateHealthBar();
+        }
+
+        private void UpdateHealthBar()
+        {
+            if (_healthBar)
+            { _healthBar.HealthPercentage = ((float)currentHP) / maxHP; }
         }
 
         /// <summary>
@@ -49,7 +81,22 @@ namespace Platformer.Mechanics
         /// </summary>
         public void Die()
         {
-            while (currentHP > 0) Decrement();
+            while (currentHP > 0)
+            {
+                _remainingInvincibilityDuration = -1;
+                Decrement(); 
+            }
+        }
+
+        public void HealToMax()
+        {
+            while (currentHP < maxHP)
+            { Increment(); }
+        }
+
+        public void LoseHealth()
+        {
+            Decrement();
         }
 
         void Awake()
