@@ -17,10 +17,12 @@ namespace Platformer.Mechanics
     /// </summary>
     public class PlayerController : KinematicObject
     {
+        [Header("Audio")]
         public AudioClip jumpAudio;
         public AudioClip respawnAudio;
         public AudioClip ouchAudio;
 
+        [Header("Stats")]
         /// <summary>
         /// Max horizontal speed of the player.
         /// </summary>
@@ -32,6 +34,12 @@ namespace Platformer.Mechanics
 
         public JumpState jumpState = JumpState.Grounded;
         private bool stopJump;
+
+        [SerializeField] private int _numAirJumps = 1;
+        private int _remainingNumAirJumps = 1;
+        private bool _isAirJumping = false;
+
+        [Header("Necessary Components")]
         /*internal new*/ public Collider2D collider2d;
         /*internal new*/ public AudioSource audioSource;
         public Health health;
@@ -67,7 +75,6 @@ namespace Platformer.Mechanics
         {
             defaultState,
             jumping,
-
             running
         }
 
@@ -90,9 +97,16 @@ namespace Platformer.Mechanics
         {
             if (controlEnabled)
             {
+                _isAirJumping = false;
+
                 move.x = Input.GetAxis("Horizontal");
-                if (jumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
-                    jumpState = JumpState.PrepareToJump;
+                if ((jumpState == JumpState.Grounded || _remainingNumAirJumps > 0)
+                    && Input.GetButtonDown("Jump"))
+                {
+                    if (jumpState != JumpState.Grounded)
+                    { _isAirJumping = true; }
+                    jumpState = JumpState.PrepareToJump; 
+                }
                 else if (Input.GetButtonUp("Jump"))
                 {
                     stopJump = true;
@@ -146,9 +160,12 @@ namespace Platformer.Mechanics
                     jumpState = JumpState.Jumping;
                     jump = true;
                     stopJump = false;
+
                     if (_dustParticleSystem)
                     { _dustParticleSystem.Emit(_nrJumpParticles); }
                     SetSpriteScaleState(SpriteScaleState.jumping);
+                    if (_isAirJumping)
+                    { DoAirJump(); }
                     break;
                 case JumpState.Jumping:
                     if (!IsGrounded)
@@ -168,7 +185,18 @@ namespace Platformer.Mechanics
                     break;
                 case JumpState.Landed:
                     jumpState = JumpState.Grounded;
+                    _remainingNumAirJumps = _numAirJumps;
                     break;
+            }
+        }
+
+        private void DoAirJump()
+        {
+            --_remainingNumAirJumps;
+            if (_remainingNumAirJumps < _numAirJumps && _remainingNumAirJumps >= 0)
+            {
+                velocity.y = jumpTakeOffSpeed * model.jumpModifier;
+                jump = false;
             }
         }
 
