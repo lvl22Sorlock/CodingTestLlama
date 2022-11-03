@@ -30,6 +30,13 @@ namespace Platformer.Mechanics
         internal int frame = 0;
         internal bool collected = false;
 
+        private enum TokenType
+        {
+            score,
+            health
+        }
+        [SerializeField] private TokenType _type = TokenType.score;
+
         void Awake()
         {
             _renderer = GetComponent<SpriteRenderer>();
@@ -48,6 +55,10 @@ namespace Platformer.Mechanics
         void OnPlayerEnter(PlayerController player)
         {
             if (collected) return;
+
+            if (_type == TokenType.health)
+            { player.health.Increment(); }
+
             //disable the gameObject and remove it from the controller update list.
             frame = 0;
             sprites = collectedAnimation;
