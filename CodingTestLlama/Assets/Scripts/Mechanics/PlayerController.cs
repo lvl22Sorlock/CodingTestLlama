@@ -44,9 +44,16 @@ namespace Platformer.Mechanics
         public Bounds Bounds => collider2d.bounds;
 
         [Space]
+        [Space]
+        [Header("Player Feedback : Particles")]
         [SerializeField] private ParticleSystem _dustParticleSystem = null;
         [SerializeField] private int _nrJumpParticles = 15;
         [SerializeField] private int _nrLandParticles = 25;
+        [Space]
+        [SerializeField] private ParticleSystem _runningParticleSystem = null;
+        private float _runParticlesEmissionTimeMultiplier = 0;
+        [SerializeField] private float _rotationYWhenMovingRightRunParticles = -90;
+        [SerializeField] private float _rotationYWhenMovingLeftRunParticles = 90;
 
         void Awake()
         {
@@ -56,6 +63,9 @@ namespace Platformer.Mechanics
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
             Assert.IsNotNull(_dustParticleSystem);
+            Assert.IsNotNull(_runningParticleSystem);
+            if (_runningParticleSystem)
+            { _runParticlesEmissionTimeMultiplier = _runningParticleSystem.emission.rateOverTimeMultiplier; }
         }
 
         protected override void Update()
@@ -69,6 +79,27 @@ namespace Platformer.Mechanics
                 {
                     stopJump = true;
                     Schedule<PlayerStopJump>().player = this;
+                }
+
+                if (_runningParticleSystem)
+                {
+                    ParticleSystem.EmissionModule emissionModule = _runningParticleSystem.emission;
+                    if (Mathf.Abs(move.x) > float.Epsilon && jumpState != JumpState.InFlight)
+                    {
+                        emissionModule.rateOverTimeMultiplier = _runParticlesEmissionTimeMultiplier;
+                        Vector3 rotationEuler = _runningParticleSystem.transform.localRotation.eulerAngles;
+                        float rotationYWhenRight = _rotationYWhenMovingRightRunParticles;
+                        float rotationYWhenLeft = _rotationYWhenMovingLeftRunParticles;
+                        _runningParticleSystem.transform.localRotation
+                            = Quaternion.Euler(
+                                rotationEuler.x,
+                                (move.x > 0) ? rotationYWhenRight : rotationYWhenLeft,
+                                rotationEuler.z);
+                    }
+                    else
+                    {
+                        emissionModule.rateOverTimeMultiplier = 0;
+                    }
                 }
             }
             else
