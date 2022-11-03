@@ -5,6 +5,7 @@ using Platformer.Gameplay;
 using static Platformer.Core.Simulation;
 using Platformer.Model;
 using Platformer.Core;
+using UnityEngine.Assertions;
 
 namespace Platformer.Mechanics
 {
@@ -42,6 +43,11 @@ namespace Platformer.Mechanics
 
         public Bounds Bounds => collider2d.bounds;
 
+        [Space]
+        [SerializeField] private ParticleSystem _dustParticleSystem = null;
+        [SerializeField] private int _nrJumpParticles = 15;
+        [SerializeField] private int _nrLandParticles = 25;
+
         void Awake()
         {
             health = GetComponent<Health>();
@@ -49,6 +55,7 @@ namespace Platformer.Mechanics
             collider2d = GetComponent<Collider2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
+            Assert.IsNotNull(_dustParticleSystem);
         }
 
         protected override void Update()
@@ -81,6 +88,8 @@ namespace Platformer.Mechanics
                     jumpState = JumpState.Jumping;
                     jump = true;
                     stopJump = false;
+                    if (_dustParticleSystem)
+                    { _dustParticleSystem.Emit(_nrJumpParticles); }
                     break;
                 case JumpState.Jumping:
                     if (!IsGrounded)
@@ -94,6 +103,8 @@ namespace Platformer.Mechanics
                     {
                         Schedule<PlayerLanded>().player = this;
                         jumpState = JumpState.Landed;
+                        if (_dustParticleSystem)
+                        { _dustParticleSystem.Emit(_nrLandParticles); }
                     }
                     break;
                 case JumpState.Landed:
