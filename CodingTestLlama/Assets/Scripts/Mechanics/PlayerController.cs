@@ -75,6 +75,9 @@ namespace Platformer.Mechanics
 
         [Header("Other")]
         [SerializeField] private bool _isCalculatingGroundedViaKinematicObject = true;
+
+        public Vector2 ConstantVelocity = Vector2.zero;
+
         private enum SpriteScaleState
         {
             defaultState,
@@ -237,9 +240,9 @@ namespace Platformer.Mechanics
                 spriteRenderer.flipX = true;
 
             animator.SetBool("grounded", IsGrounded);
-            animator.SetFloat("velocityX", Mathf.Abs(velocity.x) / maxSpeed);
+            animator.SetFloat("velocityX", Mathf.Abs(move.x * maxSpeed) / maxSpeed);
 
-            targetVelocity = move * maxSpeed;
+            targetVelocity = move * maxSpeed + ConstantVelocity;
         }
 
         public enum JumpState
@@ -282,6 +285,11 @@ namespace Platformer.Mechanics
             if (_isCalculatingGroundedViaKinematicObject) 
             { return; }
 
+            IsGrounded = newValue;
+        }
+
+        public void ForceSetIsGrounded(bool newValue)
+        {
             IsGrounded = newValue;
         }
 
