@@ -13,6 +13,9 @@ namespace Platformer.Gameplay
 
         public override void Execute()
         {
+            if (!enemy.CanDie)
+            { return; }
+
             enemy._collider.enabled = false;
             enemy.control.enabled = false;
             if (enemy._audio && enemy.ouch)

@@ -56,8 +56,8 @@ namespace Platformer.Mechanics
         /// </summary>
         public void Decrement()
         {
-            //if (_remainingInvincibilityDuration > 0)
-            //{ return; }
+            if (_remainingInvincibilityDuration > 0)
+            { return; }
 
             currentHP = Mathf.Clamp(currentHP - 1, 0, maxHP);
             if (currentHP == 0)

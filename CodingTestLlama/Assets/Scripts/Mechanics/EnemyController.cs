@@ -9,7 +9,7 @@ namespace Platformer.Mechanics
     /// <summary>
     /// A simple controller for enemies. Provides movement control over a patrol path.
     /// </summary>
-    [RequireComponent(typeof(AnimationController), typeof(Collider2D))]
+    //[RequireComponent(typeof(AnimationController), typeof(Collider2D))]
     public class EnemyController : MonoBehaviour
     {
         public PatrolPath path;
@@ -23,6 +23,15 @@ namespace Platformer.Mechanics
 
         public Bounds Bounds => _collider.bounds;
 
+
+        [SerializeField] private bool _canDie = true;
+        public bool CanDie
+        {
+            get { return _canDie; }
+            set { _canDie = value; }
+        }
+
+
         void Awake()
         {
             control = GetComponent<AnimationController>();
@@ -34,6 +43,20 @@ namespace Platformer.Mechanics
         void OnCollisionEnter2D(Collision2D collision)
         {
             var player = collision.gameObject.GetComponent<PlayerController>();
+            TryDamagePlayer(player);
+        }
+
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            var player = collision.gameObject.GetComponent<PlayerController>();
+            TryDamagePlayer(player);
+        }
+
+        private void TryDamagePlayer(PlayerController player)
+        {
+            if (!player)
+            { return; }
+
             if (player != null)
             {
                 var ev = Schedule<PlayerEnemyCollision>();
