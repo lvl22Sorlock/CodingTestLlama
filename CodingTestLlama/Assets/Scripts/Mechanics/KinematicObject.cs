@@ -28,7 +28,7 @@ namespace Platformer.Mechanics
         /// Is the entity currently sitting on a surface?
         /// </summary>
         /// <value></value>
-        public bool IsGrounded { get; private set; }
+        public bool IsGrounded { get; protected set; }
 
         protected Vector2 targetVelocity;
         protected Vector2 groundNormal;
@@ -162,7 +162,7 @@ namespace Platformer.Mechanics
                     {
                         //We are airborne, but hit something, so cancel vertical up and horizontal velocity.
                         velocity.x *= 0;
-                        velocity.y = Mathf.Min(velocity.y, 0);
+                        //velocity.y = Mathf.Min(velocity.y, 0);
                     }
                     //remove shellDistance from actual move distance.
                     var modifiedDistance = hitBuffer[i].distance - shellRadius;

@@ -8,6 +8,7 @@ using Platformer.Core;
 using UnityEngine.Assertions;
 using Unity.VisualScripting;
 using TMPro;
+using System.Security.Cryptography;
 
 namespace Platformer.Mechanics
 {
@@ -71,6 +72,9 @@ namespace Platformer.Mechanics
         [SerializeField] private Vector2 _jumpingSpriteOffset = Vector2.zero;
         [SerializeField] private Vector2 _runningScale = Vector2.one;
         [SerializeField] private Vector2 _runningSpriteOffset = Vector2.zero;
+
+        [Header("Other")]
+        [SerializeField] private bool _isCalculatingGroundedViaKinematicObject = true;
         private enum SpriteScaleState
         {
             defaultState,
@@ -91,6 +95,17 @@ namespace Platformer.Mechanics
             Assert.IsNotNull(_runningParticleSystem);
             if (_runningParticleSystem)
             { _runParticlesEmissionTimeMultiplier = _runningParticleSystem.emission.rateOverTimeMultiplier; }
+        }
+
+        protected override void FixedUpdate()
+        {
+            bool previousIsGrounded = IsGrounded;
+            base.FixedUpdate();
+
+            if (!_isCalculatingGroundedViaKinematicObject)
+            {
+                IsGrounded = previousIsGrounded;
+            }
         }
 
         protected override void Update()
@@ -260,6 +275,19 @@ namespace Platformer.Mechanics
         public void TouchedWall()
         {
             ++_remainingNumAirJumps;
+        }
+
+        public void SetIsGrounded(bool newValue)
+        {
+            if (_isCalculatingGroundedViaKinematicObject) 
+            { return; }
+
+            IsGrounded = newValue;
+        }
+
+        public void StopPositiveYMovement()
+        {
+            velocity.y = Mathf.Min(velocity.y, 0);
         }
     }
 }
