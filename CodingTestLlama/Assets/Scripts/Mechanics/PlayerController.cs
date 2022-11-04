@@ -256,5 +256,10 @@ namespace Platformer.Mechanics
                     break;
             }
         }
+
+        public void TouchedWall()
+        {
+            ++_remainingNumAirJumps;
+        }
     }
 }
